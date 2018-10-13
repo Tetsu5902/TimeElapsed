@@ -25,7 +25,7 @@
 
 
 template <const int count, typename BlockBody>
-inline void time_elapsed_impl_core(BlockBody body, const std::string& header, std::ostream &o = std::cout)
+inline float time_elapsed_impl_core(BlockBody body, const std::string& header, std::ostream &o = std::cout)
 {
 	using namespace std;
 	using namespace std::chrono;
@@ -43,14 +43,18 @@ inline void time_elapsed_impl_core(BlockBody body, const std::string& header, st
 	auto prev_precision = o.precision();
 	auto prev_width = o.width();
 
+	const float elapsed = (float)duration_cast<microseconds>(t1 - t0).count() / 1000;
+
 	o << left << setw(TIME_ELAPSED_HEADER_WIDTH) << (TIME_ELAPSED_HEADER + header);
 	o << "cnt:" << setw(8) << count;
 	o << setw(12) << right << fixed << setprecision(3)
-		<< (float)duration_cast<microseconds>(t1 - t0).count()/1000 << " msec" << endl;
+		<< elapsed << " msec" << endl;
 
 	o.width(prev_width);
 	o.precision(prev_precision);
 	o.flags(prev_flags);
+
+	return elapsed;
 }
 
 template <const int count, typename BlockBody>
@@ -61,17 +65,17 @@ inline void time_elapsed_impl_noop(BlockBody body, std::ostream &o = std::cout)
 }
 
 template <int count, typename BlockBody>
-inline void time_elapsed_impl1(BlockBody body, const char * const path, const int lno, std::ostream &o = std::cout)
+inline float time_elapsed_impl1(BlockBody body, const char * const path, const int lno, std::ostream &o = std::cout)
 {
 	std::string basename{ path + std::string(path).find_last_of("\\/") + 1 };
-	time_elapsed_impl_core<count>(body, basename + " at L." + std::to_string(lno), o);
+	return time_elapsed_impl_core<count>(body, basename + " at L." + std::to_string(lno), o);
 }
 
 template <int count, typename BlockBody>
-inline void time_elapsed_impl2(BlockBody body, const char * const bodystr, std::ostream &o = std::cout)
+inline float time_elapsed_impl2(BlockBody body, const char * const bodystr, std::ostream &o = std::cout)
 {
 	std::string heading{ std::string(bodystr).substr(0,TIME_ELAPSED_HEADER_WIDTH - sizeof(TIME_ELAPSED_HEADER) - 2)	};
-	time_elapsed_impl_core<count>(body, heading, o);
+	return time_elapsed_impl_core<count>(body, heading, o);
 }
 
 #endif // !__TIME_ELAPSED_HPP__
